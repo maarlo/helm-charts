@@ -1,0 +1,261 @@
+name: "Release Charts Pipeline"
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - "charts/**"
+  workflow_dispatch:
+    inputs:
+      chart_name:
+        description: 'Specific chart to process (e.g., "leantime"). Leave empty to process all unreleased charts.'
+        required: false
+        type: string
+      force_release:
+        description: "Force re-release of the specified chart (deletes existing GitHub release and tag). Requires chart_name."
+        required: false
+        type: boolean
+        default: false
+
+# One fixed group: every run operates on master, so runs must never overlap
+# (they share the gh-pages index and the tag namespace), whatever branch
+# a manual run was dispatched from.
+concurrency:
+  group: release-charts
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  # Push -> the exact commit that triggered the run.
+  # Manual dispatch -> always master, regardless of the branch it was started from.
+  RELEASE_REF: ${{ github.event_name == 'workflow_dispatch' && 'master' || github.sha }}
+
+jobs:
+  get-unreleased-charts:
+    name: Get unreleased charts
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      packages: read # needed to check which versions already exist in GHCR
+    outputs:
+      force_release: ${{ steps.detect.outputs.force_release }}
+      perform_release: ${{ steps.detect.outputs.perform_release }}
+      unreleased_charts: ${{ steps.detect.outputs.unreleased_charts }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ env.RELEASE_REF }}
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Detect charts to release
+        id: detect
+        env:
+          INPUT_CHART_NAME: ${{ inputs.chart_name || '' }}
+          FORCE_RELEASE: ${{ inputs.force_release || 'false' }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+
+          # ---- input validation -------------------------------------------
+          if [ "$FORCE_RELEASE" = "true" ] && [ -z "$INPUT_CHART_NAME" ]; then
+            echo "::error::force_release requires chart_name"
+            exit 1
+          fi
+          if [ -n "$INPUT_CHART_NAME" ] && ! [[ "$INPUT_CHART_NAME" =~ ^[a-z0-9][a-z0-9-]*$ ]]; then
+            echo "::error::invalid chart_name '$INPUT_CHART_NAME'"
+            exit 1
+          fi
+
+          # OCI references must be lowercase
+          OWNER="${GITHUB_REPOSITORY_OWNER,,}"
+          echo "$GH_TOKEN" | helm registry login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+
+          # ---- which charts to look at ------------------------------------
+          if [ -n "$INPUT_CHART_NAME" ]; then
+            if [ ! -f "charts/$INPUT_CHART_NAME/Chart.yaml" ]; then
+              echo "::error::Chart 'charts/$INPUT_CHART_NAME/Chart.yaml' not found"
+              exit 1
+            fi
+            chart_files=("charts/$INPUT_CHART_NAME/Chart.yaml")
+          else
+            chart_files=(charts/*/Chart.yaml)
+          fi
+
+          # ---- decide what needs releasing --------------------------------
+          # State = GitHub tag + GHCR artifact. A chart is "done" only if BOTH
+          # exist, so a half-finished release (tag but no OCI push) is retried.
+          charts=()
+          for chart_file in "${chart_files[@]}"; do
+            name=$(basename "$(dirname "$chart_file")")
+            version=$(yq -e '.version' "$chart_file") || {
+              echo "::error::No valid 'version' in $chart_file"
+              exit 1
+            }
+            tag="${name}-${version}"
+
+            if [ "$FORCE_RELEASE" = "true" ]; then
+              echo "🚀 Force release: $tag"
+              charts+=("$name")
+              continue
+            fi
+
+            tag_exists=false
+            oci_exists=false
+            git rev-parse -q --verify "refs/tags/${tag}" >/dev/null && tag_exists=true
+            helm show chart "oci://ghcr.io/${OWNER}/helm-charts/${name}" --version "$version" >/dev/null 2>&1 && oci_exists=true
+
+            if $tag_exists && $oci_exists; then
+              echo "✓ $tag already released (tag + GHCR)"
+              continue
+            fi
+
+            $tag_exists || echo "🚀 $tag: no tag yet"
+            $oci_exists || echo "🚀 $tag: not in GHCR yet"
+            charts+=("$name")
+          done
+
+          # ---- outputs ----------------------------------------------------
+          unreleased_charts=$(jq -cn '$ARGS.positional' --args "${charts[@]}")
+          perform_release=false
+          [ "${#charts[@]}" -gt 0 ] && perform_release=true
+
+          echo "Charts to release: $unreleased_charts"
+          {
+            echo "unreleased_charts=$unreleased_charts"
+            echo "perform_release=$perform_release"
+            echo "force_release=$FORCE_RELEASE"
+          } >> "$GITHUB_OUTPUT"
+
+  release:
+    name: Release ${{ matrix.chart }}
+    needs: get-unreleased-charts
+    if: needs.get-unreleased-charts.outputs.perform_release == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write # tags, releases, gh-pages
+      packages: write # GHCR
+    strategy:
+      fail-fast: false # one broken chart must not block the others
+      max-parallel: 1 # chart-releaser pushes to gh-pages; avoid races
+      matrix:
+        chart: ${{ fromJSON(needs.get-unreleased-charts.outputs.unreleased_charts) }}
+    env:
+      CHART: ${{ matrix.chart }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ env.RELEASE_REF }}
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Configure Git
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+
+      - name: Login to GHCR
+        run: |
+          echo "$GH_TOKEN" | helm registry login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+
+      - name: Resolve chart version
+        id: chart
+        run: |
+          set -euo pipefail
+          version=$(yq -e '.version' "charts/${CHART}/Chart.yaml")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=${CHART}-${version}" >> "$GITHUB_OUTPUT"
+
+      - name: Remove existing release and tag (force release)
+        if: needs.get-unreleased-charts.outputs.force_release == 'true'
+        env:
+          TAG: ${{ steps.chart.outputs.tag }}
+        run: |
+          set -euo pipefail
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Deleting GitHub release and tag: $TAG"
+            gh release delete "$TAG" --cleanup-tag --yes
+          fi
+          if git ls-remote --exit-code --tags origin "refs/tags/${TAG}" >/dev/null 2>&1; then
+            echo "Deleting leftover remote tag: $TAG"
+            git push origin ":refs/tags/${TAG}"
+          fi
+          git tag -d "$TAG" 2>/dev/null || true
+
+      - name: Package chart
+        run: |
+          set -euo pipefail
+          mkdir -p .cr-release-packages
+          helm package "charts/${CHART}" \
+            --dependency-update \
+            --destination .cr-release-packages
+
+      # We package ourselves, so chart-releaser only uploads exactly what we
+      # built instead of running its own (different) change detection.
+      - name: Run chart-releaser
+        uses: helm/chart-releaser-action@v1.7.0
+        with:
+          skip_packaging: true
+          skip_existing: true
+          charts_dir: charts
+        env:
+          CR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CR_GENERATE_RELEASE_NOTES: true
+
+      - name: Push chart to GHCR
+        env:
+          VERSION: ${{ steps.chart.outputs.version }}
+        run: |
+          set -euo pipefail
+
+          retry() {
+            local max_attempts=3 attempt=1 delay=5
+            while [ "$attempt" -le "$max_attempts" ]; do
+              if "$@"; then return 0; fi
+              echo "Attempt $attempt/$max_attempts failed. Retrying in ${delay}s..."
+              sleep "$delay"
+              delay=$((delay * 2))
+              attempt=$((attempt + 1))
+            done
+            return 1
+          }
+
+          OWNER="${GITHUB_REPOSITORY_OWNER,,}"
+          PACKAGE=".cr-release-packages/${CHART}-${VERSION}.tgz"
+
+          if [ ! -f "$PACKAGE" ]; then
+            echo "::error::Package $PACKAGE not found"
+            exit 1
+          fi
+
+          echo "Pushing ${CHART}-${VERSION} to GHCR..."
+          # No 'if' around this call: a failed push fails the job.
+          retry helm push "$PACKAGE" "oci://ghcr.io/${OWNER}/helm-charts"
+
+      - name: Job summary
+        if: always()
+        env:
+          JOB_STATUS: ${{ job.status }}
+          VERSION: ${{ steps.chart.outputs.version }}
+          FORCE_RELEASE: ${{ needs.get-unreleased-charts.outputs.force_release }}
+        run: |
+          OWNER="${GITHUB_REPOSITORY_OWNER,,}"
+          {
+            echo "## 📦 ${CHART} ${VERSION}"
+            [ "$FORCE_RELEASE" = "true" ] && echo "**⚠️ Force release mode**"
+            if [ "$JOB_STATUS" = "success" ]; then
+              echo "- ✅ Released"
+              echo "- GHCR: \`ghcr.io/${OWNER}/helm-charts/${CHART}:${VERSION}\`"
+            else
+              echo "- ❌ Release ${JOB_STATUS}"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

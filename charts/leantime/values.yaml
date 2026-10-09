@@ -1,0 +1,439 @@
+## Leantime Helm Chart values
+##
+## Comment conventions used in this file:
+##   "## @section" starts a documentation section.
+##   "## @param"   documents a parameter: full dotted path, then a description.
+##   "# key: value" is an optional parameter that is disabled by default (uncomment to use it).
+##
+
+## @section Leantime parameters
+
+leantime:
+  ## @param leantime.name Site name
+  name: "Leantime"
+  ## @param leantime.language Site language
+  language: "en-US"
+  ## @param leantime.primaryColor Main color in hex RGB
+  primaryColor: "#006d9f"
+  ## @param leantime.secondaryColor Secondary color in hex RGB
+  secondaryColor: "#00a886"
+  ## @param leantime.defaultTheme Default site theme
+  defaultTheme: ""
+  ## @param leantime.keepTheme Keep theme and language from the previous user on the login screen
+  # keepTheme: true
+  ## @param leantime.logo Site logo image path. Defaults to '/images/logo.svg' when empty
+  logo: ""
+  ## @param leantime.printLogo Site logo image path for printing (must be jpg or png). Defaults to '/images/logo.jpg' when empty
+  printLogo: ""
+  ## @param leantime.defaultTimezone Default timezone (see https://www.php.net/manual/en/timezones.php)
+  defaultTimezone: ""
+  ## @param leantime.url Base URL (e.g. https://leantime.domain.tld). Defaults to the Ingress/IngressRoute host if enabled
+  url: ""
+  ## @param leantime.sessionSalt Session salt. Randomly generated when empty
+  sessionSalt: ""
+  ## @param leantime.sessionExpiration Session expiration in seconds. Defaults to 28800 (8 hours)
+  # sessionExpiration: 28800
+  ## @param leantime.disableLoginForm If true then don't show the login form (useful only if additional auth method[s] are available)
+  # disableLoginForm: false
+  ## @param leantime.projectMenu Allow per-project menu
+  # projectMenu: false
+  ## @param leantime.debug Enable debug (0 to disable, 1 to enable)
+  # debug: 0
+  ## @param leantime.existingSecret Existing secret for the session salt. Key is 'session-salt'
+  # existingSecret: ""
+  ## @param leantime.extraEnv Map of custom environment variables (e.g. LEAN_XXX: value). Use carefully
+  # extraEnv:
+  #   LEAN_XXX: value
+
+  ## @section Leantime MySQL parameters
+  mysql:
+    ## @param leantime.mysql.host MySQL host
+    host: "{{ .Release.Name }}-mariadb"
+    ## @param leantime.mysql.port MySQL port
+    port: 3306
+    ## @param leantime.mysql.database MySQL database name
+    database: leantime
+    ## @param leantime.mysql.user MySQL user. Required if existingSecret is not set
+    user: ""
+    ## @param leantime.mysql.password MySQL password. Required if existingSecret is not set
+    password: ""
+    ## @param leantime.mysql.existingSecret Existing secret for database credentials. Keys are 'database-user' and 'database-password'
+    # existingSecret: ""
+
+  ## @section Leantime Redis parameters
+  redis:
+    ## @param leantime.redis.enabled Enable Redis
+    enabled: false
+    ## @param leantime.redis.url Redis server URL (not recommended if authentication is required). If empty, host, port, scheme and password are used instead
+    url: ""
+    ## @param leantime.redis.host Redis host. Required if URL is not used
+    host: "{{ .Release.Name }}-valkey"
+    ## @param leantime.redis.password Redis password. Stored in the common Secret unless existingSecret is set
+    password: ""
+    ## @param leantime.redis.port Redis port
+    # port: 6379
+    ## @param leantime.redis.scheme Redis scheme
+    # scheme: tcp
+    ## @param leantime.redis.existingSecret Existing secret for the Redis password. Key is 'redis-password'
+    # existingSecret: ""
+
+  ## @section Leantime S3 parameters
+  s3:
+    ## @param leantime.s3.enabled Enable S3 storage for user files
+    enabled: false
+    ## @param leantime.s3.endpoint S3 endpoint (empty or e.g. https://my-minio-host)
+    endpoint: ""
+    ## @param leantime.s3.usePathStyleEndpoint Use path-style (true: https://[endpoint]/[bucket]) instead of subdomain-style (false: https://[bucket].[endpoint]) URLs
+    usePathStyleEndpoint: false
+    ## @param leantime.s3.key S3 key. Required unless existingSecret is set
+    key: ""
+    ## @param leantime.s3.secret S3 secret. Required unless existingSecret is set
+    secret: ""
+    ## @param leantime.s3.bucket S3 bucket. Required
+    bucket: ""
+    ## @param leantime.s3.region S3 region. Required
+    region: ""
+    ## @param leantime.s3.folder S3 sub-folder
+    # folder: ""
+    ## @param leantime.s3.existingSecret Existing secret for the S3 key and secret. Keys are 's3-key' and 's3-secret'
+    # existingSecret: ""
+
+  ## @section Leantime SMTP parameters
+  smtp:
+    ## @param leantime.smtp.enabled Enable SMTP
+    enabled: false
+    ## @param leantime.smtp.from SMTP sender. Required
+    from: ""
+    ## @param leantime.smtp.host SMTP host. Required
+    host: ""
+    ## @param leantime.smtp.auth Enable SMTP authentication
+    auth: true
+    ## @param leantime.smtp.username SMTP username. Required unless existingSecret is set or auth is disabled
+    username: ""
+    ## @param leantime.smtp.password SMTP password. Required unless existingSecret is set or auth is disabled
+    password: ""
+    ## @param leantime.smtp.port SMTP port
+    # port: 587
+    ## @param leantime.smtp.secureProtocol Force a specific security protocol (tls, ssl or starttls)
+    # secureProtocol: ""
+    ## @param leantime.smtp.autoTLS Enable TLS automatically if supported by the server. Enabled by default
+    # autoTLS: false
+    ## @param leantime.smtp.insecureSSL Allow insecure SSL (do not verify the certificate, accept self-signed, etc.). Disabled by default
+    # insecureSSL: true
+    ## @param leantime.smtp.existingSecret Existing secret for the SMTP username and password. Keys are 'smtp-username' and 'smtp-password'
+    # existingSecret: ""
+
+  ## @section Leantime LDAP parameters
+  ldap:
+    ## @param leantime.ldap.enabled Enable LDAP authentication
+    enabled: false
+    ## @param leantime.ldap.uri LDAP URI
+    # uri: ""
+    ## @param leantime.ldap.host LDAP host. Required if URI is not set
+    # host: ""
+    ## @param leantime.ldap.port LDAP port
+    # port: 389
+    ## @param leantime.ldap.userDN LDAP user DN (e.g. CN=users,DC=example,DC=com). Required
+    userDN: ""
+    ## @param leantime.ldap.domain LDAP domain
+    # domain: ""
+    ## @param leantime.ldap.type LDAP directory type (OL for OpenLDAP, AD for Active Directory)
+    # type: ""
+    ## @param leantime.ldap.keys JSON mapping of user fields to LDAP user attributes
+    # keys: ""
+    ## @param leantime.ldap.groupRoles JSON mapping of user roles to LDAP groups
+    # groupRoles: ""
+    ## @param leantime.ldap.defaultRole Default role number if no mapped group is found
+    # defaultRole: 20
+
+  ## @section Leantime OIDC parameters
+  oidc:
+    ## @param leantime.oidc.enabled Enable OIDC authentication
+    enabled: false
+    ## @param leantime.oidc.clientId Client ID. Required unless existingSecret is set
+    clientId: ""
+    ## @param leantime.oidc.clientSecret Client secret. Required unless existingSecret is set
+    clientSecret: ""
+    ## @param leantime.oidc.providerUrl Provider URL. Required
+    providerUrl: ""
+    ## @param leantime.oidc.createUser Create the Leantime user if it does not exist (otherwise the login fails)
+    # createUser: true
+    ## @param leantime.oidc.defaultRole Default role for users created via OIDC (20 is editor)
+    # defaultRole: 20
+    ## @param leantime.oidc.existingSecret Existing secret for the OIDC client ID and secret. Keys are 'oidc-client-id' and 'oidc-client-secret'
+    # existingSecret: ""
+
+    overrides:
+      ## @param leantime.oidc.overrides.authUrl Auth URL
+      # authUrl: ""
+      ## @param leantime.oidc.overrides.tokenUrl Token URL
+      # tokenUrl: ""
+      ## @param leantime.oidc.overrides.jwksUrl JSON Web Key Sets URL
+      # jwksUrl: ""
+      ## @param leantime.oidc.overrides.userInfoUrl User info URL
+      # userInfoUrl: ""
+      ## @param leantime.oidc.overrides.certificateString Certificate string
+      # certificateString: ""
+      ## @param leantime.oidc.overrides.certificateFile Certificate file
+      # certificateFile: ""
+      ## @param leantime.oidc.overrides.scopes OIDC scopes
+      # scopes: ""
+      fields:
+        ## @param leantime.oidc.overrides.fields.email Email field name
+        # email: ""
+        ## @param leantime.oidc.overrides.fields.firstName First name field name
+        # firstName: ""
+        ## @param leantime.oidc.overrides.fields.lastName Last name field name
+        # lastName: ""
+        ## @param leantime.oidc.overrides.fields.phone Phone field name
+        # phone: ""
+        ## @param leantime.oidc.overrides.fields.jobTitle Job title field name
+        # jobTitle: ""
+        ## @param leantime.oidc.overrides.fields.jobLevel Job level field name
+        # jobLevel: ""
+        ## @param leantime.oidc.overrides.fields.department Department field name
+        # department: ""
+
+  ## @section Leantime rate limit parameters
+  ## @param leantime.ratelimit Rate limit settings (optional keys: general, api, auth)
+  ratelimit: {}
+    ## @param leantime.ratelimit.general General rate limit
+    # general: 100
+    ## @param leantime.ratelimit.api API rate limit
+    # api: 10
+    ## @param leantime.ratelimit.auth Authentication rate limit
+    # auth: 20
+
+## @section Service parameters
+
+service:
+  ## @param service.type Service type
+  type: ClusterIP
+  ## @param service.port Service port
+  port: 80
+  ## @param service.externalTrafficPolicy Service external traffic policy
+  externalTrafficPolicy: Cluster
+  ## @param service.loadBalancerIP Static IP for a LoadBalancer service
+  # loadBalancerIP: ""
+  nodePorts:
+    ## @param service.nodePorts.http NodePort for HTTP (chosen automatically when empty)
+    http: ""
+
+## @section Ingress parameters
+
+ingress:
+  ## @param ingress.enabled Enable Kubernetes Ingress
+  enabled: false
+  ## @param ingress.className Ingress class name
+  className: ""
+  ## @param ingress.host Ingress host. Mandatory to enable the Ingress
+  host: ""
+  ## @param ingress.annotations Ingress annotations (e.g. kubernetes.io/ingress.class: nginx)
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  ## @param ingress.tls Ingress TLS configuration
+  tls: []
+    # - secretName: leantime-tls
+    #   hosts:
+    #     - leantime.local
+
+## @section IngressRoute parameters
+
+ingressRoute:
+  ## @param ingressRoute.enabled Enable Traefik IngressRoute CRD
+  enabled: false
+  ## @param ingressRoute.className IngressRoute class name
+  className: ""
+  ## @param ingressRoute.host IngressRoute host. Mandatory to enable the IngressRoute
+  host: ""
+  ## @param ingressRoute.entrypoints IngressRoute entrypoints
+  entrypoints:
+    - websecure
+  ## @param ingressRoute.tls IngressRoute TLS configuration (e.g. certResolver: letsencrypt)
+  tls: []
+    # certResolver: letsencrypt
+
+## @section Storage parameters
+
+## @param additionalVolumes Additional volumes, to be used by sidecars
+# additionalVolumes: []
+
+## @section User Files storage parameters
+
+userFilesStorage:
+  ## @param userFilesStorage.enabled Enable persistent storage for user files. Subpaths are mounted: 'userfiles' into /var/www/userfiles and 'public-userfiles' into /var/www/public/userfiles
+  enabled: false
+  ## @param userFilesStorage.size Persistent Volume size
+  size: 1Gi
+  ## @param userFilesStorage.accessMode Persistent Volume access mode
+  accessMode: ReadWriteOnce
+  ## @param userFilesStorage.storageClass Persistent Volume storage class
+  # storageClass: "-"
+  ## @param userFilesStorage.existingClaim Use an existing Persistent Volume Claim
+  # existingClaim: ""
+  ## @param userFilesStorage.annotations Annotations to add to the Persistent Volume Claim
+  annotations: {}
+
+## @section Plugins storage parameters
+
+pluginsStorage:
+  ## @param pluginsStorage.enabled Enable persistent storage for sessions
+  enabled: false
+  ## @param pluginsStorage.size Persistent Volume size
+  size: 1Gi
+  ## @param pluginsStorage.accessMode Persistent Volume access mode
+  accessMode: ReadWriteOnce
+  ## @param pluginsStorage.storageClass Persistent Volume storage class
+  # storageClass: "-"
+  ## @param pluginsStorage.existingClaim Use an existing Persistent Volume Claim
+  # existingClaim: ""
+
+## @section Image parameters
+
+image:
+  ## @param image.repository Image repository
+  repository: leantime/leantime
+  ## @param image.pullPolicy Image pull policy
+  pullPolicy: IfNotPresent
+  ## @param image.tag Image tag. Defaults to the chart appVersion when empty
+  tag: ""
+
+## @section MariaDB parameters
+
+mariadb:
+  ## @param mariadb.enabled Enable embedded MariaDB database
+  enabled: true
+  auth:
+    ## @param mariadb.auth.database MariaDB database name
+    database: "leantime"
+    ## @param mariadb.auth.username MariaDB database user (leave empty for root user)
+    username: "leantime"
+    ## @param mariadb.auth.password MariaDB database password
+    password: ""
+    ## @param mariadb.auth.rootPassword MariaDB root password
+    rootPassword: ""
+    ## @param mariadb.auth.existingSecret Existing secret containing the MariaDB root and user passwords
+    existingSecret: ""
+    ## @param mariadb.auth.secretKeys.rootPasswordKey Secret key for the MariaDB root password
+    ## @param mariadb.auth.secretKeys.userPasswordKey Secret key for the MariaDB user password
+    secretKeys:
+      rootPasswordKey: database-root-password
+      userPasswordKey: database-password
+
+## @section Valkey parameters
+
+valkey:
+  ## @param valkey.enabled Enable embedded Valkey in-memory data structure store
+  enabled: true
+  auth:
+    ## @param valkey.auth.enabled Enable password authentication
+    enabled: true
+    ## @param valkey.auth.password Valkey password
+    password: ""
+    ## @param valkey.auth.existingSecret The name of an existing secret with Valkey credentials
+    existingSecret: ""
+    ## @param valkey.auth.existingSecretPasswordKey Password key to be retrieved from existing secret
+    existingSecretPasswordKey: "redis-password"
+
+## @section Common parameters
+
+## @param imagePullSecrets Image pull secrets
+imagePullSecrets: []
+## @param nameOverride Partially override the chart name
+nameOverride: ""
+## @param fullnameOverride Fully override the release name
+fullnameOverride: ""
+## @param replicaCount Number of replicas
+replicaCount: 1
+## @param revisionHistoryLimit Number of old ReplicaSets to retain
+revisionHistoryLimit: 10
+
+serviceAccount:
+  ## @param serviceAccount.create Specifies whether a service account should be created
+  create: false
+  ## @param serviceAccount.annotations Annotations to add to the service account
+  annotations: {}
+  ## @param serviceAccount.name Name of the service account to use. If empty and create is true, a name is generated using the fullname template
+  name: ""
+  ## @param serviceAccount.automountServiceAccountToken Auto-mount the ServiceAccount token on the created service account. Can be set to false if pods do not need the K8s API
+  automountServiceAccountToken: false
+
+## @param automountServiceAccountToken Mount the Service Account token in the pod
+automountServiceAccountToken: false
+
+## @section Pod parameters
+
+## @param deploymentAnnotations Annotations to add to the Deployment
+deploymentAnnotations: {}
+
+## @param probes Readiness and liveness probes (optional keys: liveness, readiness)
+probes: {}
+  # liveness:
+  #   timeoutSeconds: 1
+  #   periodSeconds: 10
+  #   successThreshold: 1
+  #   failureThreshold: 3
+  # readiness:
+  #   timeoutSeconds: 1
+  #   periodSeconds: 10
+  #   successThreshold: 1
+  #   failureThreshold: 3
+
+## @param initContainers Init containers (see https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/pod-v1/#Container). No templating possible, values need to be hardcoded
+initContainers: []
+  # - name: initcontainer
+  #   image: initcontainer:1.2.3
+  #   env:
+  #     - name: INITCONTAINER_END
+  #       value: "initcontainer"
+  #   volumeMounts:
+  #     - name: leantime
+  #       mountPath: /data
+
+## @param sidecars Sidecar containers (see https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/pod-v1/#Container). No templating possible, values need to be hardcoded
+sidecars: []
+  # - name: sidecar
+  #   image: sidecarimage:1.2.3
+  #   env:
+  #     - name: SIDECAR_END
+  #       value: "sidecar"
+  #   volumeMounts:
+  #     - name: leantime
+  #       mountPath: /data
+
+## @param podAnnotations Annotations to add to the pods
+podAnnotations: {}
+## @param podLabels Labels to add to the pods
+podLabels: {}
+
+## @param podSecurityContext Pod security context
+podSecurityContext: {}
+  # fsGroup: 2000
+
+## @param securityContext Container security context
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #     - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+## @param resources Container resource requests and limits.
+## No defaults are set on purpose, so that charts can run on environments with few resources (e.g. Minikube).
+## To set them, uncomment the lines below, adjust them as necessary and remove the curly braces after 'resources:'.
+resources: {}
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+## @param nodeSelector Node labels for pod assignment
+nodeSelector: {}
+## @param tolerations Tolerations for pod assignment
+tolerations: []
+## @param affinity Affinity for pod assignment
+affinity: {}

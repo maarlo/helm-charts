@@ -1,0 +1,777 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Leantime Helm Chart values",
+  "type": "object",
+  "definitions": {
+    "existingSecret": {
+      "type": "string",
+      "description": "Name of an existing secret"
+    },
+    "accessMode": {
+      "type": "string",
+      "enum": [
+        "ReadWriteOnce",
+        "ReadOnlyMany",
+        "ReadWriteMany",
+        "ReadWriteOncePod"
+      ]
+    },
+    "stringMap": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "probe": {
+      "type": "object",
+      "properties": {
+        "timeoutSeconds": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "periodSeconds": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "successThreshold": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "failureThreshold": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "resourceList": {
+      "type": "object",
+      "additionalProperties": {
+        "type": [
+          "string",
+          "integer",
+          "number"
+        ]
+      }
+    }
+  },
+  "properties": {
+    "leantime": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Site name"
+        },
+        "language": {
+          "type": "string",
+          "description": "Site language"
+        },
+        "primaryColor": {
+          "type": "string",
+          "description": "Main color in hex RGB",
+          "pattern": "^(#[0-9a-fA-F]{3}|#[0-9a-fA-F]{6})?$"
+        },
+        "secondaryColor": {
+          "type": "string",
+          "description": "Secondary color in hex RGB",
+          "pattern": "^(#[0-9a-fA-F]{3}|#[0-9a-fA-F]{6})?$"
+        },
+        "defaultTheme": {
+          "type": "string",
+          "description": "Default site theme"
+        },
+        "keepTheme": {
+          "type": "boolean",
+          "description": "Keep theme and language from the previous user on the login screen"
+        },
+        "logo": {
+          "type": "string",
+          "description": "Site logo image path"
+        },
+        "printLogo": {
+          "type": "string",
+          "description": "Site logo image path for printing (jpg or png)"
+        },
+        "defaultTimezone": {
+          "type": "string",
+          "description": "Default timezone"
+        },
+        "url": {
+          "type": "string",
+          "description": "Base URL"
+        },
+        "sessionSalt": {
+          "type": "string",
+          "description": "Session salt"
+        },
+        "sessionExpiration": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Session expiration in seconds"
+        },
+        "projectMenu": {
+          "type": "boolean",
+          "description": "Allow per-project menu"
+        },
+        "disableLoginForm": {
+          "type": "boolean",
+          "description": "If true then don't show the login form (useful only if additional auth method[s] are available)"
+        },
+        "debug": {
+          "type": "integer",
+          "enum": [
+            0,
+            1
+          ],
+          "description": "Enable debug (0 to disable, 1 to enable)"
+        },
+        "existingSecret": {
+          "$ref": "#/definitions/existingSecret"
+        },
+        "extraEnv": {
+          "type": "object",
+          "description": "Map of custom environment variables",
+          "additionalProperties": {
+            "type": [
+              "string",
+              "number",
+              "boolean"
+            ]
+          }
+        },
+        "mysql": {
+          "type": "object",
+          "properties": {
+            "host": {
+              "type": "string"
+            },
+            "port": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 65535
+            },
+            "database": {
+              "type": "string"
+            },
+            "user": {
+              "type": "string"
+            },
+            "password": {
+              "type": "string"
+            },
+            "existingSecret": {
+              "$ref": "#/definitions/existingSecret"
+            }
+          }
+        },
+        "s3": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "endpoint": {
+              "type": "string"
+            },
+            "usePathStyleEndpoint": {
+              "type": "boolean"
+            },
+            "key": {
+              "type": "string"
+            },
+            "secret": {
+              "type": "string"
+            },
+            "bucket": {
+              "type": "string"
+            },
+            "region": {
+              "type": "string"
+            },
+            "folder": {
+              "type": "string"
+            },
+            "existingSecret": {
+              "$ref": "#/definitions/existingSecret"
+            }
+          }
+        },
+        "smtp": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "from": {
+              "type": "string"
+            },
+            "host": {
+              "type": "string"
+            },
+            "auth": {
+              "type": "boolean"
+            },
+            "username": {
+              "type": "string"
+            },
+            "password": {
+              "type": "string"
+            },
+            "port": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 65535
+            },
+            "secureProtocol": {
+              "type": "string",
+              "enum": [
+                "",
+                "tls",
+                "ssl",
+                "starttls"
+              ]
+            },
+            "autoTLS": {
+              "type": "boolean"
+            },
+            "insecureSSL": {
+              "type": "boolean"
+            },
+            "existingSecret": {
+              "$ref": "#/definitions/existingSecret"
+            }
+          }
+        },
+        "ldap": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "uri": {
+              "type": "string"
+            },
+            "host": {
+              "type": "string"
+            },
+            "port": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 65535
+            },
+            "userDN": {
+              "type": "string"
+            },
+            "domain": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "",
+                "OL",
+                "AD"
+              ],
+              "description": "OL for OpenLDAP, AD for Active Directory"
+            },
+            "keys": {
+              "type": "string",
+              "description": "JSON mapping of user fields to LDAP user attributes"
+            },
+            "groupRoles": {
+              "type": "string",
+              "description": "JSON mapping of user roles to LDAP groups"
+            },
+            "defaultRole": {
+              "type": "integer"
+            }
+          }
+        },
+        "oidc": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "clientId": {
+              "type": "string"
+            },
+            "clientSecret": {
+              "type": "string"
+            },
+            "providerUrl": {
+              "type": "string"
+            },
+            "createUser": {
+              "type": "boolean"
+            },
+            "defaultRole": {
+              "type": "integer"
+            },
+            "existingSecret": {
+              "$ref": "#/definitions/existingSecret"
+            },
+            "overrides": {
+              "type": "object",
+              "properties": {
+                "authUrl": {
+                  "type": "string"
+                },
+                "tokenUrl": {
+                  "type": "string"
+                },
+                "jwksUrl": {
+                  "type": "string"
+                },
+                "userInfoUrl": {
+                  "type": "string"
+                },
+                "certificateString": {
+                  "type": "string"
+                },
+                "certificateFile": {
+                  "type": "string"
+                },
+                "scopes": {
+                  "type": "string"
+                },
+                "fields": {
+                  "type": "object",
+                  "properties": {
+                    "email": {
+                      "type": "string"
+                    },
+                    "firstName": {
+                      "type": "string"
+                    },
+                    "lastName": {
+                      "type": "string"
+                    },
+                    "phone": {
+                      "type": "string"
+                    },
+                    "jobTitle": {
+                      "type": "string"
+                    },
+                    "jobLevel": {
+                      "type": "string"
+                    },
+                    "department": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "redis": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "url": {
+              "type": "string"
+            },
+            "host": {
+              "type": "string"
+            },
+            "password": {
+              "type": "string"
+            },
+            "port": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 65535
+            },
+            "scheme": {
+              "type": "string"
+            },
+            "existingSecret": {
+              "$ref": "#/definitions/existingSecret"
+            }
+          }
+        },
+        "ratelimit": {
+          "type": "object",
+          "properties": {
+            "general": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "api": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "auth": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      }
+    },
+    "service": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "ClusterIP",
+            "NodePort",
+            "LoadBalancer"
+          ]
+        },
+        "port": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "externalTrafficPolicy": {
+          "type": "string",
+          "enum": [
+            "Cluster",
+            "Local"
+          ]
+        },
+        "loadBalancerIP": {
+          "type": "string"
+        },
+        "nodePorts": {
+          "type": "object",
+          "properties": {
+            "http": {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 65535
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "ingress": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "className": {
+          "type": "string"
+        },
+        "host": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "annotations": {
+          "$ref": "#/definitions/stringMap"
+        },
+        "tls": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "secretName": {
+                "type": "string"
+              },
+              "hosts": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "ingressRoute": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "className": {
+          "type": "string"
+        },
+        "host": {
+          "type": "string"
+        },
+        "entrypoints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "tls": {
+          "description": "TLS configuration. Empty array by default; an object (e.g. with certResolver) is also accepted",
+          "oneOf": [
+            {
+              "type": "array"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "certResolver": {
+                  "type": "string"
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "userFilesStorage": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "size": {
+          "type": "string",
+          "pattern": "^[0-9]+(\\.[0-9]+)?([EPTGMK]i?|m)?$"
+        },
+        "accessMode": {
+          "$ref": "#/definitions/accessMode"
+        },
+        "storageClass": {
+          "type": "string"
+        },
+        "existingClaim": {
+          "type": "string"
+        },
+        "annotations": {
+          "$ref": "#/definitions/stringMap"
+        }
+      }
+    },
+    "additionalVolumes": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "pluginsStorage": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "size": {
+          "type": "string",
+          "pattern": "^[0-9]+(\\.[0-9]+)?([EPTGMK]i?|m)?$"
+        },
+        "accessMode": {
+          "$ref": "#/definitions/accessMode"
+        },
+        "storageClass": {
+          "type": "string"
+        },
+        "existingClaim": {
+          "type": "string"
+        }
+      }
+    },
+    "image": {
+      "type": "object",
+      "properties": {
+        "repository": {
+          "type": "string"
+        },
+        "pullPolicy": {
+          "type": "string",
+          "enum": [
+            "Always",
+            "IfNotPresent",
+            "Never"
+          ]
+        },
+        "tag": {
+          "type": [
+            "string",
+            "number"
+          ]
+        }
+      }
+    },
+    "mariadb": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "auth": {
+          "type": "object",
+          "properties": {
+            "database": {
+              "type": "string"
+            },
+            "username": {
+              "type": "string"
+            },
+            "password": {
+              "type": "string"
+            },
+            "rootPassword": {
+              "type": "string"
+            },
+            "existingSecret": {
+              "type": "string"
+            },
+            "secretKeys": {
+              "type": "object",
+              "properties": {
+                "rootPasswordKey": {
+                  "type": "string"
+                },
+                "userPasswordKey": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "valkey": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "auth": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "password": {
+              "type": "string"
+            },
+            "existingSecret": {
+              "type": "string"
+            },
+            "existingSecretPasswordKey": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "imagePullSecrets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "nameOverride": {
+      "type": "string"
+    },
+    "fullnameOverride": {
+      "type": "string"
+    },
+    "replicaCount": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "revisionHistoryLimit": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "serviceAccount": {
+      "type": "object",
+      "properties": {
+        "create": {
+          "type": "boolean"
+        },
+        "annotations": {
+          "$ref": "#/definitions/stringMap"
+        },
+        "name": {
+          "type": "string"
+        },
+        "automountServiceAccountToken": {
+          "type": "boolean"
+        }
+      }
+    },
+    "automountServiceAccountToken": {
+      "type": "boolean"
+    },
+    "deploymentAnnotations": {
+      "$ref": "#/definitions/stringMap"
+    },
+    "probes": {
+      "type": "object",
+      "properties": {
+        "liveness": {
+          "$ref": "#/definitions/probe"
+        },
+        "readiness": {
+          "$ref": "#/definitions/probe"
+        }
+      }
+    },
+    "initContainers": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "sidecars": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "podAnnotations": {
+      "$ref": "#/definitions/stringMap"
+    },
+    "podLabels": {
+      "$ref": "#/definitions/stringMap"
+    },
+    "podSecurityContext": {
+      "type": "object"
+    },
+    "securityContext": {
+      "type": "object"
+    },
+    "resources": {
+      "type": "object",
+      "properties": {
+        "limits": {
+          "$ref": "#/definitions/resourceList"
+        },
+        "requests": {
+          "$ref": "#/definitions/resourceList"
+        }
+      }
+    },
+    "nodeSelector": {
+      "$ref": "#/definitions/stringMap"
+    },
+    "tolerations": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "affinity": {
+      "type": "object"
+    }
+  }
+}

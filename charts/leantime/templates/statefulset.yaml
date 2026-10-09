@@ -450,7 +450,7 @@ spec:
     - apiVersion: v1
       kind: PersistentVolumeClaim
       metadata:
-        name: {{ include "leantime.fullname" . }}-user-files
+        name: {{ include "leantime.fullname" . }}-plugins
         {{- with .Values.pluginsStorage.annotations }}
         annotations:
           {{- toYaml . | nindent 4 }}

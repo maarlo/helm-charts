@@ -469,6 +469,9 @@
         "host": {
           "type": "string"
         },
+        "path": {
+          "type": "string"
+        },
         "annotations": {
           "$ref": "#/definitions/stringMap"
         },

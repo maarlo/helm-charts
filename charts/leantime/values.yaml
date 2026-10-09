@@ -20,7 +20,7 @@ leantime:
   ## @param leantime.defaultTheme Default site theme
   defaultTheme: ""
   ## @param leantime.keepTheme Keep theme and language from the previous user on the login screen
-  # keepTheme: true
+  keepTheme: true
   ## @param leantime.logo Site logo image path. Defaults to '/images/logo.svg' when empty
   logo: ""
   ## @param leantime.printLogo Site logo image path for printing (must be jpg or png). Defaults to '/images/logo.jpg' when empty
@@ -228,6 +228,8 @@ ingress:
   className: ""
   ## @param ingress.host Ingress host. Mandatory to enable the Ingress
   host: ""
+  ## @param ingress.path Ingress path.
+  path: ""
   ## @param ingress.annotations Ingress annotations (e.g. kubernetes.io/ingress.class: nginx)
   annotations: {}
     # kubernetes.io/ingress.class: nginx

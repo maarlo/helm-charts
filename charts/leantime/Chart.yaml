@@ -16,7 +16,7 @@ sources:
   - https://github.com/maarlo/helm-charts/tree/master/charts/leantime
   - https://github.com/Leantime/leantime
 maintainers:
-  - name: Mario Aragonés Lozano
+  - name: Mario Aragones Lozano
     email: mario.aragones.lozano@gmail.com
 dependencies:
   - name: mariadb

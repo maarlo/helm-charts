@@ -28,7 +28,7 @@ spec:
     - host: {{ required "Host required for ingress" .Values.ingress.host | quote }}
       http:
         paths:
-          - path: "/"
+          - path: {{ .Values.ingress.path | default "/" | quote }}
             pathType: Prefix
             backend:
               service:

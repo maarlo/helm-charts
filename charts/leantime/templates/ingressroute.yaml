@@ -8,7 +8,9 @@ metadata:
   labels:
     {{- include "leantime.labels" . | nindent 4 }}
 spec:
+  {{- if ne .Values.ingressRoute.className "" }}
   ingressClassName: {{ .Values.ingressRoute.className }}
+  {{- end }}
   entryPoints:
   {{- range .Values.ingressRoute.entrypoints }}
     - {{ . | quote }}

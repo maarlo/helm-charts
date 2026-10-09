@@ -71,10 +71,10 @@ Select the right database secret
 
 {{- define "leantime.url" -}}
 {{- if .Values.leantime.url }}
-  {{- .Values.leantime.url }}
+{{- .Values.leantime.url }}
 {{- else if .Values.ingress.enabled }}
-  http{{ if $.Values.ingress.tls }}s{{ end }}://{{ .Values.ingress.host }}
+http{{ if $.Values.ingress.tls }}s{{ end }}://{{ .Values.ingress.host }}
 {{- else if .Values.ingressRoute.enabled }}
-  http{{ if $.Values.ingressRoute.tls }}s{{ end }}://{{ .Values.ingressRoute.host }}
+http{{ if $.Values.ingressRoute.tls }}s{{ end }}://{{ .Values.ingressRoute.host }}
 {{- end }}
 {{- end }}

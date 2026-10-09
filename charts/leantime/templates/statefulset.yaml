@@ -108,7 +108,7 @@ spec:
               value: {{ .Values.leantime.debug | quote }}
             {{- end }}
             - name: LEAN_DB_HOST
-              value: {{ .Values.leantime.mysql.host | quote }}
+              value: {{ include "common.tplvalues.render" ( dict "value" .Values.leantime.mysql.host "context" $ ) | quote }}
             - name: LEAN_DB_DATABASE
               value: {{ .Values.leantime.mysql.database | quote }}
             - name: LEAN_DB_PORT
@@ -317,7 +317,7 @@ spec:
             {{- else }}
             {{- if .Values.leantime.redis.host }}
             - name: LEAN_REDIS_HOST
-              value: {{ required "Redis host or URL required" .Values.leantime.redis.host | quote }}
+              value: {{ include "common.tplvalues.render" ( dict "value" .Values.leantime.redis.host "context" $ ) | quote }}
             {{- end }}
             {{- if .Values.leantime.redis.port }}
             - name: LEAN_REDIS_PORT
@@ -373,13 +373,13 @@ spec:
             {{- toYaml .Values.probes.readiness | nindent 12 }}
             {{- end }}
           volumeMounts:
-          - name: {{ include "leantime.fullname" . }}-user-files
+          - name: user-files
             mountPath: /var/www/html/userfiles
             subPath: userfiles
-          - name: {{ include "leantime.fullname" . }}-user-files
+          - name: user-files
             mountPath: /var/www/html/public/userfiles
             subPath: public-userfiles
-          - name: {{ include "leantime.fullname" . }}-plugins
+          - name: plugins
             mountPath: /var/www/html/app/Plugins
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
@@ -387,23 +387,22 @@ spec:
           {{- toYaml .Values.sidecars | nindent 8 }}
         {{- end }}
       volumes:
-      - name: {{ include "leantime.fullname" . }}
+      - name: user-files
         {{- if .Values.userFilesStorage.enabled }}
         persistentVolumeClaim:
-          claimName: {{ if .Values.userFilesStorage.existingClaim }}{{ .Values.userFilesStorage.existingClaim | quote }}{{- else }}{{ include "leantime.fullname" . }}-user-files{{- end }}
+          claimName: {{ if .Values.userFilesStorage.existingClaim }}{{ .Values.userFilesStorage.existingClaim | quote }}{{- else }}user-files{{- end }}
         {{- else }}
         emptyDir: {}
         {{- end }}
-      - name: {{ include "leantime.fullname" . }}-plugins
+      - name: plugins
         {{- if .Values.pluginsStorage.enabled }}
         persistentVolumeClaim:
-          claimName: {{ if .Values.pluginsStorage.existingClaim }}{{ .Values.pluginsStorage.existingClaim | quote }}{{- else }}{{ include "leantime.fullname" . }}-plugins{{- end }}
+          claimName: {{ if .Values.pluginsStorage.existingClaim }}{{ .Values.pluginsStorage.existingClaim | quote }}{{- else }}plugins{{- end }}
         {{- else }}
         emptyDir: {}
         {{- end }}
       {{- if .Values.additionalVolumes }}
         {{- toYaml .Values.additionalVolumes | nindent 6 }}
-      {{- end }}
       {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
@@ -419,11 +418,11 @@ spec:
       {{- end }}
   {{- if or (and .Values.userFilesStorage.enabled (not .Values.userFilesStorage.existingClaim)) (and .Values.pluginsStorage.enabled (not .Values.pluginsStorage.existingClaim)) }}
   volumeClaimTemplates:
-    {{- if and .Values.userFilesStorage.enabled (not .Values.userFilesStorage.existingClaim) -}}
+    {{- if and .Values.userFilesStorage.enabled (not .Values.userFilesStorage.existingClaim) }}
     - apiVersion: v1
       kind: PersistentVolumeClaim
       metadata:
-        name: {{ include "leantime.fullname" . }}-user-files
+        name: user-files
         {{- with .Values.userFilesStorage.annotations }}
         annotations:
           {{- toYaml . | nindent 4 }}
@@ -445,12 +444,12 @@ spec:
         selector:
           {{- toYaml . | nindent 10 }}
         {{- end }}
-    {{- end -}}
-    {{- if and .Values.pluginsStorage.enabled (not .Values.pluginsStorage.existingClaim) -}}
+    {{- end }}
+    {{- if and .Values.pluginsStorage.enabled (not .Values.pluginsStorage.existingClaim) }}
     - apiVersion: v1
       kind: PersistentVolumeClaim
       metadata:
-        name: {{ include "leantime.fullname" . }}-plugins
+        name: plugins
         {{- with .Values.pluginsStorage.annotations }}
         annotations:
           {{- toYaml . | nindent 4 }}
@@ -472,5 +471,5 @@ spec:
         selector:
           {{- toYaml . | nindent 10 }}
         {{- end }}
-    {{- end -}}
+    {{- end }}
   {{- end }}

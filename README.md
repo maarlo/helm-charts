@@ -2,8 +2,9 @@
 
 ## Available Charts
 
-| Chart | Description | Version | App Version |
-| ----- | ----------- | ------- | ----------- |
+| Chart                                                                          | Description                                    | Version                                                                                                                                                                        | App Version                                                                                                                                                                           |
+| ------------------------------------------------------------------------------ | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Leantime](https://github.com/maarlo/helm-charts/tree/master/charts/leantime/) | Project management for the non-project manager | ![Version](https://img.shields.io/badge/dynamic/yaml?url=https://raw.githubusercontent.com/maarlo/helm-charts/master/charts/leantime/Chart.yaml&label=&query=version&prefix=v) | ![App Version](https://img.shields.io/badge/dynamic/yaml?url=https://raw.githubusercontent.com/maarlo/helm-charts/master/charts/leantime/Chart.yaml&label=&query=appVersion&prefix=v) |
 
 ## Quick Start
 

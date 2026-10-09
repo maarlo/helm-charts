@@ -1,0 +1,38 @@
+apiVersion: v1
+entries:
+  leantime:
+  - apiVersion: v2
+    appVersion: 3.10.4
+    created: "2026-10-09T16:42:35.938459265Z"
+    dependencies:
+    - condition: mariadb.enabled
+      name: mariadb
+      repository: oci://registry-1.docker.io/cloudpirates
+      version: 0.16.x
+    - condition: valkey.enabled
+      name: valkey
+      repository: oci://registry-1.docker.io/cloudpirates
+      version: 0.25.x
+    description: Project management for the non-project manager
+    digest: 75ab24973394bd7f73beea7df3c89655128b2acc1572e22b7833d5fbef31112e
+    home: https://leantime.io/
+    icon: https://raw.githubusercontent.com/Leantime/leantime/master/public/images/icon-192.png
+    keywords:
+    - project-management
+    - task-management
+    - agile
+    - kanban
+    - lean
+    - scrum
+    maintainers:
+    - email: mario.aragones.lozano@gmail.com
+      name: Mario Aragones Lozano
+    name: leantime
+    sources:
+    - https://github.com/maarlo/helm-charts/tree/master/charts/leantime
+    - https://github.com/Leantime/leantime
+    type: application
+    urls:
+    - https://github.com/maarlo/helm-charts/releases/download/leantime-0.1.0/leantime-0.1.0.tgz
+    version: 0.1.0
+generated: "2026-10-09T16:42:35.938464856Z"

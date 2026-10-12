@@ -202,7 +202,7 @@ jobs:
       # We package ourselves, so chart-releaser only uploads exactly what we
       # built instead of running its own (different) change detection.
       - name: Run chart-releaser
-        uses: helm/chart-releaser-action@v1.7.0
+        uses: helm/chart-releaser-action@fae9146b935c45c307b67c4495043ea3fd3e3355 # v1.7.0
         with:
           skip_packaging: true
           skip_existing: true

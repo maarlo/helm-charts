@@ -66,14 +66,14 @@ leantime:
     enabled: false
     ## @param leantime.redis.url Redis server URL (not recommended if authentication is required). If empty, host, port, scheme and password are used instead
     url: ""
+    ## @param leantime.redis.scheme Redis scheme
+    scheme: tcp
     ## @param leantime.redis.host Redis host. Required if URL is not used
     host: "{{ .Release.Name }}-valkey"
-    ## @param leantime.redis.password Redis password. Stored in the common Secret unless existingSecret is set
-    password: ""
     ## @param leantime.redis.port Redis port
     # port: 6379
-    ## @param leantime.redis.scheme Redis scheme
-    # scheme: tcp
+    ## @param leantime.redis.password Redis password. Stored in the common Secret unless existingSecret is set
+    # password: ""
     ## @param leantime.redis.existingSecret Existing secret for the Redis password. Key is 'redis-password'
     # existingSecret: ""
 

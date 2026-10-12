@@ -78,3 +78,17 @@ http{{ if $.Values.ingress.tls }}s{{ end }}://{{ .Values.ingress.host }}
 http{{ if $.Values.ingressRoute.tls }}s{{ end }}://{{ .Values.ingressRoute.host }}
 {{- end }}
 {{- end }}
+
+{{- define "leantime.smtpFromEmail" -}}
+{{- if regexMatch "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$" .Values.leantime.smtp.from }}
+{{- .Values.leantime.smtp.from }}
+{{- else if regexMatch "^[\\w]+[\\w\\s]*<[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}>$" .Values.leantime.smtp.from }}
+{{- regexFind "<[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}>" .Values.leantime.smtp.from | replace "<" "" | replace ">" "" }}
+{{- end }}
+{{- end }}
+
+{{- define "leantime.smtpFromName" -}}
+{{- if regexMatch "^[\\w]+[\\w\\s]*<[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}>$" .Values.leantime.smtp.from }}
+{{- regexFind "[\\w]+[\\w\\s]*" .Values.leantime.smtp.from | trim }}
+{{- end }}
+{{- end }}

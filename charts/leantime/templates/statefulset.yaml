@@ -157,7 +157,11 @@ spec:
             - name: LEAN_EMAIL_USE_SMTP
               value: "true"
             - name: LEAN_EMAIL_RETURN
-              value: {{ required "Sender ('from') required to enable SMTP" .Values.leantime.smtp.from | quote }}
+              value: {{ required "Sender ('from') email required to enable SMTP. Can either be in the format 'foo@bar.baz' or 'Leantime <foo@bar.baz>'" (include "leantime.smtpFromEmail" .) | quote }}
+            {{- if ne (include "leantime.smtpFromName" .) "" }}
+            - name: LEAN_EMAIL_FROM_NAME
+              value: {{ include "leantime.smtpFromName" . | quote }}
+            {{- end }}
             - name: LEAN_EMAIL_SMTP_HOSTS
               value: {{ required "Host required to enable SMTP" .Values.leantime.smtp.host | quote }}
             {{- if .Values.leantime.smtp.autoTLS }}

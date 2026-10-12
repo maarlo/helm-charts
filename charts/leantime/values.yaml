@@ -102,7 +102,7 @@ leantime:
   smtp:
     ## @param leantime.smtp.enabled Enable SMTP
     enabled: false
-    ## @param leantime.smtp.from SMTP sender. Required
+    ## @param leantime.smtp.from SMTP sender. Required. Can either be in the format "foo@bar.baz" or "Leantime <foo@bar.baz>"
     from: ""
     ## @param leantime.smtp.host SMTP host. Required
     host: ""

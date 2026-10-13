@@ -381,6 +381,8 @@ spec:
             mountPath: /tmp
           - name: logs
             mountPath: /var/www/html/storage/logs
+          - name: cache
+            mountPath: /var/www/html/bootstrap/cache
           - name: user-files
             mountPath: /var/www/html/userfiles
             subPath: userfiles
@@ -398,6 +400,8 @@ spec:
       - name: tmp
         emptyDir: {}
       - name: logs
+        emptyDir: {}
+      - name: cache
         emptyDir: {}
       - name: user-files
         {{- if .Values.userFilesStorage.enabled }}

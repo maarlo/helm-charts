@@ -423,7 +423,7 @@ containerSecurityContext:
   ## @param containerSecurityContext.allowPrivilegeEscalation Set Leantime container's privilege escalation
   allowPrivilegeEscalation: false
   ## @param containerSecurityContext.readOnlyRootFilesystem Set Leantime container's Security Context readOnlyRootFilesystem
-  readOnlyRootFilesystem: true
+  readOnlyRootFilesystem: false
 
 ## @param resources Container resource requests and limits.
 ## No defaults are set on purpose, so that charts can run on environments with few resources (e.g. Minikube).

@@ -379,8 +379,8 @@ spec:
           volumeMounts:
           - name: tmp
             mountPath: /tmp
-          - name: logs
-            mountPath: /var/www/html/storage/logs
+          - name: storage
+            mountPath: /var/www/html/storage
           - name: cache
             mountPath: /var/www/html/bootstrap/cache
           - name: user-files
@@ -399,7 +399,7 @@ spec:
       volumes:
       - name: tmp
         emptyDir: {}
-      - name: logs
+      - name: storage
         emptyDir: {}
       - name: cache
         emptyDir: {}

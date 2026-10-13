@@ -379,6 +379,8 @@ spec:
           volumeMounts:
           - name: tmp
             mountPath: /tmp
+          - name: logs
+            mountPath: /var/www/html/storage/logs
           - name: user-files
             mountPath: /var/www/html/userfiles
             subPath: userfiles
@@ -394,6 +396,8 @@ spec:
         {{- end }}
       volumes:
       - name: tmp
+        emptyDir: {}
+      - name: logs
         emptyDir: {}
       - name: user-files
         {{- if .Values.userFilesStorage.enabled }}

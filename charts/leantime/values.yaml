@@ -411,16 +411,19 @@ podLabels: {}
 
 ## @param podSecurityContext Pod security context
 podSecurityContext: {}
-  # fsGroup: 2000
+  ## @param podSecurityContext.fsGroup Set Leantime pod's Security Context fsGroup
+  fsGroup: 1000
 
-## @param securityContext Container security context
-securityContext: {}
-  # capabilities:
-  #   drop:
-  #     - ALL
-  # readOnlyRootFilesystem: true
-  # runAsNonRoot: true
-  # runAsUser: 1000
+## @param containerSecurityContext Container security context
+containerSecurityContext:
+  ## @param containerSecurityContext.runAsNonRoot Set Leantime container's Security Context runAsNonRoot
+  runAsNonRoot: true
+  ## @param containerSecurityContext.runAsUser Set Leantime container's Security Context runAsUser
+  runAsUser: 1000
+  ## @param containerSecurityContext.allowPrivilegeEscalation Set Leantime container's privilege escalation
+  allowPrivilegeEscalation: false
+  ## @param containerSecurityContext.readOnlyRootFilesystem Set Leantime container's Security Context readOnlyRootFilesystem
+  readOnlyRootFilesystem: true
 
 ## @param resources Container resource requests and limits.
 ## No defaults are set on purpose, so that charts can run on environments with few resources (e.g. Minikube).

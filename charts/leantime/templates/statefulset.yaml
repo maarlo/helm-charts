@@ -379,10 +379,12 @@ spec:
           volumeMounts:
           - name: tmp
             mountPath: /tmp
-          - name: storage
-            mountPath: /var/www/html/storage
           - name: cache
             mountPath: /var/www/html/bootstrap/cache
+          - name: framework-storage
+            mountPath: /var/www/html/storage/framework
+          - name: logs
+            mountPath: /var/www/html/storage/logs
           - name: user-files
             mountPath: /var/www/html/userfiles
             subPath: userfiles
@@ -399,9 +401,11 @@ spec:
       volumes:
       - name: tmp
         emptyDir: {}
-      - name: storage
-        emptyDir: {}
       - name: cache
+        emptyDir: {}
+      - name: framework-storage
+        emptyDir: {}
+      - name: logs
         emptyDir: {}
       - name: user-files
         {{- if .Values.userFilesStorage.enabled }}

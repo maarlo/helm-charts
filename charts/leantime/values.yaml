@@ -410,7 +410,7 @@ podAnnotations: {}
 podLabels: {}
 
 ## @param podSecurityContext Pod security context
-podSecurityContext: {}
+podSecurityContext:
   ## @param podSecurityContext.fsGroup Set Leantime pod's Security Context fsGroup
   fsGroup: 1000
 

@@ -377,6 +377,8 @@ spec:
             {{- toYaml .Values.probes.readiness | nindent 12 }}
             {{- end }}
           volumeMounts:
+          - name: tmp
+            mountPath: /tmp
           - name: user-files
             mountPath: /var/www/html/userfiles
             subPath: userfiles
@@ -391,6 +393,8 @@ spec:
           {{- toYaml .Values.sidecars | nindent 8 }}
         {{- end }}
       volumes:
+      - name: tmp
+        emptyDir: {}
       - name: user-files
         {{- if .Values.userFilesStorage.enabled }}
         persistentVolumeClaim:

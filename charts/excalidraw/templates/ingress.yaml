@@ -1,10 +1,10 @@
-{{- if .Values.ingress.enabled -}}
+{{- if .Values.ingress.enabled }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: {{ include "excalidraw.fullname" . }}
   labels:
-    {{- include "excalidraw.labels" . | nindent 4 }}
+    {{- include "excalidraw.labels" (dict "ctx" . "component" "web") | nindent 4 }}
   {{- with .Values.ingress.annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
@@ -15,29 +15,36 @@ spec:
   {{- end }}
   {{- if .Values.ingress.tls }}
   tls:
-    {{- range .Values.ingress.tls }}
-    - hosts:
-        {{- range .hosts }}
-        - {{ . | quote }}
-        {{- end }}
-      secretName: {{ .secretName }}
+    - secretName: {{ .Values.ingress.web.tlsSecretName }}
+      hosts:
+        - {{ .Values.ingress.web.host | quote }}
+    {{- if .Values.ingress.room.host }}
+    - secretName: {{ default .Values.ingress.web.tlsSecretName .Values.ingress.room.tlsSecretName }}
+      hosts:
+        - {{ .Values.ingress.room.host | quote }}
     {{- end }}
   {{- end }}
   rules:
-    {{- range .Values.ingress.hosts }}
-    - host: {{ .host | quote }}
+    - host: {{ .Values.ingress.web.host | quote }}
       http:
         paths:
-          {{- range .paths }}
-          - path: {{ .path }}
-            {{- with .pathType }}
-            pathType: {{ . }}
-            {{- end }}
+          {{- if not .Values.ingress.room.host }}
+          - path: /socket.io
+            pathType: Prefix
             backend:
-              service:
-                name: {{ include "excalidraw.fullname" $ }}
-                port:
-                  number: {{ $.Values.service.port }}
+              service: { name: {{ include "excalidraw.fullname" . }}-room, port: { name: ws } }
           {{- end }}
+          - path: /
+            pathType: Prefix
+            backend:
+              service: { name: {{ include "excalidraw.fullname" . }}-web, port: { name: http } }
+    {{- if .Values.ingress.room.host }}
+    - host: {{ .Values.ingress.room.host | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service: { name: {{ include "excalidraw.fullname" . }}-room, port: { name: ws } }
     {{- end }}
 {{- end }}

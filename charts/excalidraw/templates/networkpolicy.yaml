@@ -1,0 +1,34 @@
+{{- if .Values.networkPolicy.enabled }}
+{{- range $c := list "web" "room" }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "excalidraw.fullname" $ }}-{{ $c }}
+  labels:
+    {{- include "excalidraw.labels" (dict "ctx" $ "component" $c) | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "excalidraw.selectorLabels" (dict "ctx" $ "component" $c) | nindent 6 }}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - {{- with $.Values.networkPolicy.ingressFrom }}
+      from:
+        {{- toYaml . | nindent 8 }}
+      {{- else }} {}
+      {{- end }}
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              {{- toYaml $.Values.networkPolicy.dnsNamespaceSelector | nindent 14 }}
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+{{- end }}
+{{- end }}

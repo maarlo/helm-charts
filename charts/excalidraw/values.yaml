@@ -1,161 +1,228 @@
-# Default values for excalidraw.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
+# Copyright notice intentionally omitted. Comments follow the Bitnami readme-generator-for-helm format.
 
-# This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
-replicaCount: 1
+## @section Global parameters
+## @descriptionStart
+## Parameters shared by every component of the chart.
+## @descriptionEnd
 
-# This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
-image:
-  repository: nginx
-  # This sets the pull policy for images.
-  pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the chart appVersion.
-  tag: ""
+global:
+  ## @param global.imageRegistry Global container image registry. Overrides every `*.image.registry`. Set it to your internal registry (Harbor, Nexus...) for air-gapped clusters
+  ##
+  imageRegistry: ""
 
-# This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+## @param imagePullSecrets [array] Secrets used to pull images from a private registry (list of `{name: <secret>}`)
+## e.g:
+## imagePullSecrets:
+##   - name: harbor-pull-secret
+##
 imagePullSecrets: []
-# This is to override the chart name.
+## @param nameOverride String to partially override the release name used in resource names
+##
 nameOverride: ""
+## @param fullnameOverride String to fully override the resource names
+##
 fullnameOverride: ""
 
-# This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/
-serviceAccount:
-  # Specifies whether a service account should be created.
-  create: true
-  # Automatically mount a ServiceAccount's API credentials?
-  automount: true
-  # Annotations to add to the service account.
-  annotations: {}
-  # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template.
-  name: ""
+## @section Excalidraw frontend (web) parameters
+## @descriptionStart
+## Static nginx serving the Excalidraw SPA. An initContainer patches the hardcoded collaboration URL before nginx starts.
+## @descriptionEnd
 
-# This is for setting Kubernetes Annotations to a Pod.
-# For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
-podAnnotations: {}
-# This is for setting Kubernetes Labels to a Pod.
-# For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
-podLabels: {}
+web:
+  ## @param web.replicaCount Number of frontend replicas
+  ##
+  replicaCount: 1
+  ## Excalidraw frontend image
+  ## ref: https://hub.docker.com/r/excalidraw/excalidraw
+  ## @param web.image.registry Frontend image registry
+  ## @param web.image.repository Frontend image repository
+  ## @param web.image.tag Frontend image tag. Upstream only publishes `latest`, so pin by digest in production
+  ## @param web.image.digest Frontend image digest (e.g. `sha256:abcd...`). When set, it takes precedence over the tag
+  ## @param web.image.pullPolicy Frontend image pull policy
+  ##
+  image:
+    registry: docker.io
+    repository: excalidraw/excalidraw
+    tag: latest
+    digest: ""
+    pullPolicy: IfNotPresent
+  ## Frontend container resource requests and limits
+  ## @param web.resources.requests.cpu Frontend CPU request
+  ## @param web.resources.requests.memory Frontend memory request
+  ## @param web.resources.limits.memory Frontend memory limit
+  ##
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      memory: 256Mi
+  ## @param web.podAnnotations [object] Extra annotations for the frontend pods
+  ##
+  podAnnotations: {}
+  ## @param web.nodeSelector [object] Node labels for frontend pod assignment
+  ##
+  nodeSelector: {}
+  ## @param web.tolerations [array] Tolerations for frontend pod assignment
+  ##
+  tolerations: []
+  ## @param web.affinity [object] Affinity for frontend pod assignment
+  ##
+  affinity: {}
+  ## @param web.podSecurityContext [object] Pod-level security context for the frontend pods
+  ##
+  podSecurityContext: {}
+  ## Container-level security context (applied to the init and main containers).
+  ## nginx needs root to bind port 80 and write its cache, so `runAsNonRoot` and `readOnlyRootFilesystem` are not set by default
+  ## @param web.securityContext.allowPrivilegeEscalation Disallow privilege escalation in the frontend containers
+  ## @param web.securityContext.seccompProfile.type Seccomp profile type for the frontend containers
+  ##
+  securityContext:
+    allowPrivilegeEscalation: false
+    seccompProfile:
+      type: RuntimeDefault
 
-podSecurityContext: {}
-  # fsGroup: 2000
+## @section Collaboration server (room) parameters
+## @descriptionStart
+## excalidraw-room, the socket.io server that relays real-time collaboration messages.
+## @descriptionEnd
 
-securityContext: {}
-  # capabilities:
-  #   drop:
-  #   - ALL
-  # readOnlyRootFilesystem: true
-  # runAsNonRoot: true
-  # runAsUser: 1000
+room:
+  ## @param room.replicaCount Number of room server replicas. Rooms are kept in memory without a shared adapter, so only 0 or 1 is allowed
+  ##
+  replicaCount: 1
+  ## @param room.port Port the room server listens on (exported to the container as `PORT`)
+  ##
+  port: 3002
+  ## excalidraw-room image
+  ## ref: https://hub.docker.com/r/excalidraw/excalidraw-room
+  ## @param room.image.registry Room image registry
+  ## @param room.image.repository Room image repository
+  ## @param room.image.tag Room image tag. Upstream only publishes `latest`, so pin by digest in production
+  ## @param room.image.digest Room image digest (e.g. `sha256:abcd...`). When set, it takes precedence over the tag
+  ## @param room.image.pullPolicy Room image pull policy
+  ##
+  image:
+    registry: docker.io
+    repository: excalidraw/excalidraw-room
+    tag: latest
+    digest: ""
+    pullPolicy: IfNotPresent
+  ## Room container resource requests and limits
+  ## @param room.resources.requests.cpu Room CPU request
+  ## @param room.resources.requests.memory Room memory request
+  ## @param room.resources.limits.memory Room memory limit
+  ##
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      memory: 256Mi
+  ## @param room.env [array] Extra environment variables for the room container
+  ## e.g:
+  ## env:
+  ##   - name: DEBUG
+  ##     value: "1"
+  ##
+  env: []
+  ## @param room.podAnnotations [object] Extra annotations for the room pods
+  ##
+  podAnnotations: {}
+  ## @param room.nodeSelector [object] Node labels for room pod assignment
+  ##
+  nodeSelector: {}
+  ## @param room.tolerations [array] Tolerations for room pod assignment
+  ##
+  tolerations: []
+  ## @param room.affinity [object] Affinity for room pod assignment
+  ##
+  affinity: {}
+  ## @param room.podSecurityContext [object] Pod-level security context for the room pods
+  ##
+  podSecurityContext: {}
+  ## @param room.securityContext.allowPrivilegeEscalation Disallow privilege escalation in the room container
+  ## @param room.securityContext.seccompProfile.type Seccomp profile type for the room container
+  ##
+  securityContext:
+    allowPrivilegeEscalation: false
+    seccompProfile:
+      type: RuntimeDefault
 
-# This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
-service:
-  # This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
-  type: ClusterIP
-  # This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
-  port: 80
+## @section Collaboration URL patching parameters
+## @descriptionStart
+## The official frontend image hardcodes `https://oss-collab.excalidraw.com` and ignores runtime env vars
+## (upstream issue excalidraw/excalidraw#5188). These parameters control the startup rewrite.
+## @descriptionEnd
 
-# This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
+collab:
+  ## @param collab.wsServerUrl URL browsers use to reach the room server. Empty means derive it from the ingress (`ingress.room.host`, else `ingress.web.host` with path `/socket.io`)
+  ##
+  wsServerUrl: ""
+
+rewrite:
+  ## @param rewrite.extra [array] Extra literal `from`/`to` string replacements applied to the static files after the mandatory collab rewrite. Use it to neutralise other external endpoints
+  ## e.g:
+  ## extra:
+  ##   - from: https://json.excalidraw.com/api/v2
+  ##     to: https://draw.corp.internal/api/v2
+  ##
+  extra: []
+
+## @section Ingress parameters
+## @descriptionStart
+## HTTPS is required by browsers for live collaboration (WebCrypto needs a secure context).
+## @descriptionEnd
+
 ingress:
-  enabled: false
-  className: ""
+  ## @param ingress.enabled Create an Ingress resource
+  ##
+  enabled: true
+  ## @param ingress.className IngressClass name
+  ##
+  className: traefik
+  ## @param ingress.scheme Public scheme seen by browsers (`http` or `https`). Keep `https` even if TLS terminates at an external load balancer
+  ##
+  scheme: https
+  ## @param ingress.tls Enable TLS on the Ingress
+  ##
+  tls: false
+  ## @param ingress.annotations [object] Ingress annotations. The defaults keep long-lived WebSocket connections open on ingress-nginx
+  ##
   annotations: {}
-    # kubernetes.io/ingress.class: nginx
-    # kubernetes.io/tls-acme: "true"
-  hosts:
-    - host: chart-example.local
-      paths:
-        - path: /
-          pathType: ImplementationSpecific
-  tls: []
-    # - secretName: chart-example-tls
-    #   hosts:
-    #     - chart-example.local
+  ## Hostname serving the frontend (and the room server when `ingress.room.host` is empty)
+  ## @param ingress.web.host Hostname serving the frontend (and the room server when `ingress.room.host` is empty)
+  ## @param ingress.web.tlsSecretName TLS secret for the web host
+  ##
+  web:
+    host: draw.corp.internal
+    tlsSecretName: excalidraw-tls
+  ## Optional dedicated hostname for the room server
+  ## @param ingress.room.host Dedicated hostname for the room server. Empty means same host as the frontend with path `/socket.io` (no CORS needed)
+  ## @param ingress.room.tlsSecretName TLS secret for the dedicated room host. Defaults to `ingress.web.tlsSecretName`
+  ##
+  room:
+    host: ""
+    tlsSecretName: ""
 
-# -- Expose the service via gateway-api HTTPRoute
-# Requires Gateway API resources and suitable controller installed within the cluster
-# (see: https://gateway-api.sigs.k8s.io/guides/)
-httpRoute:
-  # HTTPRoute enabled.
+## @section Network policy parameters
+## @descriptionStart
+## Enforces the air gap: pods may only egress to DNS.
+## @descriptionEnd
+
+networkPolicy:
+  ## @param networkPolicy.enabled Create NetworkPolicies for the frontend and room pods
+  ##
   enabled: false
-  # HTTPRoute annotations.
-  annotations: {}
-  # Which Gateways this Route is attached to.
-  parentRefs:
-  - name: gateway
-    sectionName: http
-    # namespace: default
-  # Hostnames matching HTTP header.
-  hostnames:
-  - chart-example.local
-  # List of rules and filters applied.
-  rules:
-  - matches:
-    - path:
-        type: PathPrefix
-        value: /headers
-  #   filters:
-  #   - type: RequestHeaderModifier
-  #     requestHeaderModifier:
-  #       set:
-  #       - name: My-Overwrite-Header
-  #         value: this-is-the-only-value
-  #       remove:
-  #       - User-Agent
-  # - matches:
-  #   - path:
-  #       type: PathPrefix
-  #       value: /echo
-  #     headers:
-  #     - name: version
-  #       value: v2
-
-resources: {}
-  # We usually recommend not to specify default resources and to leave this as a conscious
-  # choice for the user. This also increases chances charts run on environments with little
-  # resources, such as Minikube. If you do want to specify resources, uncomment the following
-  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-  # limits:
-  #   cpu: 100m
-  #   memory: 128Mi
-  # requests:
-  #   cpu: 100m
-  #   memory: 128Mi
-
-# This is to setup the liveness and readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
-livenessProbe:
-  httpGet:
-    path: /
-    port: http
-readinessProbe:
-  httpGet:
-    path: /
-    port: http
-
-# This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/
-autoscaling:
-  enabled: false
-  minReplicas: 1
-  maxReplicas: 100
-  targetCPUUtilizationPercentage: 80
-  # targetMemoryUtilizationPercentage: 80
-
-# Additional volumes on the output Deployment definition.
-volumes: []
-  # - name: foo
-  #   secret:
-  #     secretName: mysecret
-  #     optional: false
-
-# Additional volumeMounts on the output Deployment definition.
-volumeMounts: []
-  # - name: foo
-  #   mountPath: "/etc/foo"
-  #   readOnly: true
-
-nodeSelector: {}
-
-tolerations: []
-
-affinity: {}
+  ## @param networkPolicy.dnsNamespaceSelector [object] Labels selecting the namespace running the cluster DNS (egress on port 53 is allowed to it)
+  ##
+  dnsNamespaceSelector:
+    kubernetes.io/metadata.name: kube-system
+  ## @param networkPolicy.ingressFrom [array] Allowed ingress peers (e.g. the ingress controller namespace). Empty allows any source
+  ## e.g:
+  ## ingressFrom:
+  ##   - namespaceSelector:
+  ##       matchLabels:
+  ##         kubernetes.io/metadata.name: ingress-nginx
+  ##
+  ingressFrom: []

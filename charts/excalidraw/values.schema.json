@@ -1,0 +1,629 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "excalidraw chart values",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "global": {
+      "type": "object",
+      "description": "Global parameters",
+      "properties": {
+        "imageRegistry": {
+          "type": "string",
+          "description": "Global image registry"
+        }
+      },
+      "additionalProperties": false
+    },
+    "imagePullSecrets": {
+      "type": "array",
+      "description": "Image pull secrets",
+      "items": {
+        "type": "object",
+        "description": "Secret ref",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Secret name",
+            "minLength": 1
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "name"
+        ]
+      }
+    },
+    "nameOverride": {
+      "type": "string",
+      "description": "Partial name override"
+    },
+    "fullnameOverride": {
+      "type": "string",
+      "description": "Full name override"
+    },
+    "web": {
+      "type": "object",
+      "description": "Frontend",
+      "properties": {
+        "replicaCount": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Frontend replicas"
+        },
+        "image": {
+          "type": "object",
+          "description": "Frontend image",
+          "properties": {
+            "registry": {
+              "type": "string",
+              "description": "Image registry"
+            },
+            "repository": {
+              "type": "string",
+              "description": "Image repository",
+              "minLength": 1
+            },
+            "tag": {
+              "type": "string",
+              "description": "Image tag"
+            },
+            "digest": {
+              "type": "string",
+              "description": "Image digest; takes precedence over tag",
+              "pattern": "^(sha256:[a-f0-9]{64})?$"
+            },
+            "pullPolicy": {
+              "type": "string",
+              "description": "Image pull policy",
+              "enum": [
+                "Always",
+                "IfNotPresent",
+                "Never"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "repository",
+            "pullPolicy"
+          ]
+        },
+        "resources": {
+          "type": "object",
+          "description": "Frontend resources",
+          "properties": {
+            "requests": {
+              "type": "object",
+              "description": "Requests",
+              "properties": {
+                "cpu": {
+                  "oneOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    {
+                      "type": "number"
+                    }
+                  ]
+                },
+                "memory": {
+                  "oneOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    {
+                      "type": "number"
+                    }
+                  ]
+                }
+              },
+              "additionalProperties": false
+            },
+            "limits": {
+              "type": "object",
+              "description": "Limits",
+              "properties": {
+                "cpu": {
+                  "oneOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    {
+                      "type": "number"
+                    }
+                  ]
+                },
+                "memory": {
+                  "oneOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    {
+                      "type": "number"
+                    }
+                  ]
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "podAnnotations": {
+          "type": "object",
+          "description": "Pod annotations",
+          "additionalProperties": true
+        },
+        "nodeSelector": {
+          "type": "object",
+          "description": "Node selector",
+          "additionalProperties": true
+        },
+        "tolerations": {
+          "type": "array",
+          "description": "Tolerations",
+          "items": {
+            "type": "object"
+          }
+        },
+        "affinity": {
+          "type": "object",
+          "description": "Affinity",
+          "additionalProperties": true
+        },
+        "podSecurityContext": {
+          "type": "object",
+          "description": "Pod security context",
+          "additionalProperties": true
+        },
+        "securityContext": {
+          "type": "object",
+          "description": "Frontend container security context",
+          "properties": {
+            "allowPrivilegeEscalation": {
+              "type": "boolean"
+            },
+            "seccompProfile": {
+              "type": "object",
+              "description": "Seccomp profile",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "Profile type",
+                  "enum": [
+                    "RuntimeDefault",
+                    "Localhost",
+                    "Unconfined"
+                  ]
+                },
+                "localhostProfile": {
+                  "type": "string",
+                  "description": "Localhost profile"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "replicaCount",
+        "image"
+      ]
+    },
+    "room": {
+      "type": "object",
+      "description": "Room server",
+      "properties": {
+        "replicaCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Room replicas (in-memory rooms: 0 or 1)"
+        },
+        "port": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535,
+          "description": "Room listen port"
+        },
+        "image": {
+          "type": "object",
+          "description": "Room image",
+          "properties": {
+            "registry": {
+              "type": "string",
+              "description": "Image registry"
+            },
+            "repository": {
+              "type": "string",
+              "description": "Image repository",
+              "minLength": 1
+            },
+            "tag": {
+              "type": "string",
+              "description": "Image tag"
+            },
+            "digest": {
+              "type": "string",
+              "description": "Image digest; takes precedence over tag",
+              "pattern": "^(sha256:[a-f0-9]{64})?$"
+            },
+            "pullPolicy": {
+              "type": "string",
+              "description": "Image pull policy",
+              "enum": [
+                "Always",
+                "IfNotPresent",
+                "Never"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "repository",
+            "pullPolicy"
+          ]
+        },
+        "resources": {
+          "type": "object",
+          "description": "Room resources",
+          "properties": {
+            "requests": {
+              "type": "object",
+              "description": "Requests",
+              "properties": {
+                "cpu": {
+                  "oneOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    {
+                      "type": "number"
+                    }
+                  ]
+                },
+                "memory": {
+                  "oneOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    {
+                      "type": "number"
+                    }
+                  ]
+                }
+              },
+              "additionalProperties": false
+            },
+            "limits": {
+              "type": "object",
+              "description": "Limits",
+              "properties": {
+                "cpu": {
+                  "oneOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    {
+                      "type": "number"
+                    }
+                  ]
+                },
+                "memory": {
+                  "oneOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    {
+                      "type": "number"
+                    }
+                  ]
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "env": {
+          "type": "array",
+          "description": "Extra env vars",
+          "items": {
+            "type": "object",
+            "description": "Env var",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Name",
+                "minLength": 1
+              },
+              "value": {
+                "type": "string"
+              },
+              "valueFrom": {
+                "type": "object"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ]
+          }
+        },
+        "podAnnotations": {
+          "type": "object",
+          "description": "Pod annotations",
+          "additionalProperties": true
+        },
+        "nodeSelector": {
+          "type": "object",
+          "description": "Node selector",
+          "additionalProperties": true
+        },
+        "tolerations": {
+          "type": "array",
+          "description": "Tolerations",
+          "items": {
+            "type": "object"
+          }
+        },
+        "affinity": {
+          "type": "object",
+          "description": "Affinity",
+          "additionalProperties": true
+        },
+        "podSecurityContext": {
+          "type": "object",
+          "description": "Pod security context",
+          "additionalProperties": true
+        },
+        "securityContext": {
+          "type": "object",
+          "description": "Room container security context",
+          "properties": {
+            "allowPrivilegeEscalation": {
+              "type": "boolean"
+            },
+            "seccompProfile": {
+              "type": "object",
+              "description": "Seccomp profile",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "Profile type",
+                  "enum": [
+                    "RuntimeDefault",
+                    "Localhost",
+                    "Unconfined"
+                  ]
+                },
+                "localhostProfile": {
+                  "type": "string",
+                  "description": "Localhost profile"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "replicaCount",
+        "port",
+        "image"
+      ]
+    },
+    "collab": {
+      "type": "object",
+      "description": "Collaboration URL",
+      "properties": {
+        "wsServerUrl": {
+          "type": "string",
+          "description": "Browser-facing room URL",
+          "pattern": "^(https?://.+)?$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "rewrite": {
+      "type": "object",
+      "description": "URL rewrite",
+      "properties": {
+        "extra": {
+          "type": "array",
+          "description": "Extra replacements",
+          "items": {
+            "type": "object",
+            "description": "Replacement",
+            "properties": {
+              "from": {
+                "type": "string",
+                "description": "Literal source string",
+                "minLength": 1,
+                "pattern": "^\\S+$"
+              },
+              "to": {
+                "type": "string",
+                "description": "Literal replacement",
+                "pattern": "^\\S*$"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "from",
+              "to"
+            ]
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "ingress": {
+      "type": "object",
+      "description": "Ingress",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "className": {
+          "type": "string",
+          "description": "IngressClass"
+        },
+        "scheme": {
+          "type": "string",
+          "description": "Public scheme",
+          "enum": [
+            "http",
+            "https"
+          ]
+        },
+        "annotations": {
+          "type": "object",
+          "description": "Annotations",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "tls": {
+          "type": "boolean",
+          "description": "Enable TLS on the Ingress"
+        },
+        "room": {
+          "type": "object",
+          "description": "Dedicated room host",
+          "properties": {
+            "host": {
+              "type": "string",
+              "description": "Hostname"
+            },
+            "tlsSecretName": {
+              "type": "string",
+              "description": "TLS secret"
+            }
+          },
+          "additionalProperties": false
+        },
+        "web": {
+          "type": "object",
+          "description": "Frontend host",
+          "properties": {
+            "host": {
+              "type": "string",
+              "description": "Hostname"
+            },
+            "tlsSecretName": {
+              "type": "string",
+              "description": "TLS secret"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "host"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "enabled",
+        "scheme",
+        "web"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "enabled": {
+                "const": true
+              }
+            },
+            "required": [
+              "enabled"
+            ]
+          },
+          "then": {
+            "properties": {
+              "web": {
+                "properties": {
+                  "host": {
+                    "minLength": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "enabled": {
+                "const": true
+              },
+              "tls": {
+                "const": true
+              }
+            },
+            "required": [
+              "enabled",
+              "tls"
+            ]
+          },
+          "then": {
+            "properties": {
+              "web": {
+                "required": [
+                  "tlsSecretName"
+                ],
+                "properties": {
+                  "tlsSecretName": {
+                    "minLength": 1
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "networkPolicy": {
+      "type": "object",
+      "description": "NetworkPolicy",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "dnsNamespaceSelector": {
+          "type": "object",
+          "description": "DNS namespace labels",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "ingressFrom": {
+          "type": "array",
+          "description": "Ingress peers",
+          "items": {
+            "type": "object"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "enabled"
+      ]
+    }
+  }
+}

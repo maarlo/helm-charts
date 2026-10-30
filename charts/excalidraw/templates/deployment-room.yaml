@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "excalidraw.fullname" . }}-room
+  labels:
+    {{- include "excalidraw.labels" (dict "ctx" . "component" "room") | nindent 4 }}
+spec:
+  replicas: {{ .Values.room.replicaCount }}
+  strategy:
+    # in-memory rooms: never run two copies side by side
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "excalidraw.selectorLabels" (dict "ctx" . "component" "room") | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.room.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "excalidraw.selectorLabels" (dict "ctx" . "component" "room") | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.room.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: excalidraw-room
+          image: {{ include "excalidraw.image" (dict "ctx" . "img" .Values.room.image) }}
+          imagePullPolicy: {{ .Values.room.image.pullPolicy }}
+          env:
+            - name: PORT
+              value: {{ .Values.room.port | quote }}
+            {{- with .Values.room.env }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          ports:
+            - name: ws
+              containerPort: {{ .Values.room.port }}
+          readinessProbe:
+            httpGet:
+              path: /
+              port: ws
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: ws
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          {{- with .Values.room.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.room.resources | nindent 12 }}
+      {{- with .Values.room.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.room.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.room.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

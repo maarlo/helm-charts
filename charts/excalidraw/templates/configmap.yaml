@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "excalidraw.fullname" . }}-rewrite
+  labels:
+    {{- include "excalidraw.labels" (dict "ctx" . "component" "web") | nindent 4 }}
+data:
+  # format: <from> <to> <required|optional>
+  replacements.txt: |
+    https://oss-collab.excalidraw.com {{ include "excalidraw.wsUrl" . }} required
+    {{- range .Values.rewrite.extra }}
+    {{ .from }} {{ .to }} optional
+    {{- end }}
+  rewrite.sh: |
+    #!/bin/sh
+    # Copies the prebuilt static site to a writable volume and rewrites hardcoded
+    # external URLs (upstream issue excalidraw/excalidraw#5188).
+    set -eu
+    SRC=/usr/share/nginx/html
+    DST=/work
+    cp -a "$SRC"/. "$DST"/
+    while read -r from to mode; do
+      [ -z "${from:-}" ] && continue
+      from_esc=$(printf '%s' "$from" | sed 's/[][\.*^$|/]/\\&/g')
+      to_esc=$(printf '%s' "$to" | sed 's/[&|\\]/\\&/g')
+      files=$(grep -rlIF -- "$from" "$DST" || true)
+      if [ -z "$files" ]; then
+        echo "WARN: '$from' not found in any file"
+        if [ "$mode" = "required" ]; then
+          echo "ERROR: required pattern missing, image layout changed upstream?" >&2
+          exit 1
+        fi
+        continue
+      fi
+      echo "$files" | xargs sed -i "s|$from_esc|$to_esc|g"
+      echo "OK: '$from' -> '$to' in $(echo "$files" | wc -l) file(s)"
+    done < /scripts/replacements.txt

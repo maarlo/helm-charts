@@ -1,0 +1,228 @@
+# Copyright notice intentionally omitted. Comments follow the Bitnami readme-generator-for-helm format.
+
+## @section Global parameters
+## @descriptionStart
+## Parameters shared by every component of the chart.
+## @descriptionEnd
+
+global:
+  ## @param global.imageRegistry Global container image registry. Overrides every `*.image.registry`. Set it to your internal registry (Harbor, Nexus...) for air-gapped clusters
+  ##
+  imageRegistry: ""
+
+## @param imagePullSecrets [array] Secrets used to pull images from a private registry (list of `{name: <secret>}`)
+## e.g:
+## imagePullSecrets:
+##   - name: harbor-pull-secret
+##
+imagePullSecrets: []
+## @param nameOverride String to partially override the release name used in resource names
+##
+nameOverride: ""
+## @param fullnameOverride String to fully override the resource names
+##
+fullnameOverride: ""
+
+## @section Excalidraw frontend (web) parameters
+## @descriptionStart
+## Static nginx serving the Excalidraw SPA. An initContainer patches the hardcoded collaboration URL before nginx starts.
+## @descriptionEnd
+
+web:
+  ## @param web.replicaCount Number of frontend replicas
+  ##
+  replicaCount: 1
+  ## Excalidraw frontend image
+  ## ref: https://hub.docker.com/r/excalidraw/excalidraw
+  ## @param web.image.registry Frontend image registry
+  ## @param web.image.repository Frontend image repository
+  ## @param web.image.tag Frontend image tag. Upstream only publishes `latest`, so pin by digest in production
+  ## @param web.image.digest Frontend image digest (e.g. `sha256:abcd...`). When set, it takes precedence over the tag
+  ## @param web.image.pullPolicy Frontend image pull policy
+  ##
+  image:
+    registry: docker.io
+    repository: excalidraw/excalidraw
+    tag: latest
+    digest: ""
+    pullPolicy: IfNotPresent
+  ## Frontend container resource requests and limits
+  ## @param web.resources.requests.cpu Frontend CPU request
+  ## @param web.resources.requests.memory Frontend memory request
+  ## @param web.resources.limits.memory Frontend memory limit
+  ##
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      memory: 256Mi
+  ## @param web.podAnnotations [object] Extra annotations for the frontend pods
+  ##
+  podAnnotations: {}
+  ## @param web.nodeSelector [object] Node labels for frontend pod assignment
+  ##
+  nodeSelector: {}
+  ## @param web.tolerations [array] Tolerations for frontend pod assignment
+  ##
+  tolerations: []
+  ## @param web.affinity [object] Affinity for frontend pod assignment
+  ##
+  affinity: {}
+  ## @param web.podSecurityContext [object] Pod-level security context for the frontend pods
+  ##
+  podSecurityContext: {}
+  ## Container-level security context (applied to the init and main containers).
+  ## nginx needs root to bind port 80 and write its cache, so `runAsNonRoot` and `readOnlyRootFilesystem` are not set by default
+  ## @param web.securityContext.allowPrivilegeEscalation Disallow privilege escalation in the frontend containers
+  ## @param web.securityContext.seccompProfile.type Seccomp profile type for the frontend containers
+  ##
+  securityContext:
+    allowPrivilegeEscalation: false
+    seccompProfile:
+      type: RuntimeDefault
+
+## @section Collaboration server (room) parameters
+## @descriptionStart
+## excalidraw-room, the socket.io server that relays real-time collaboration messages.
+## @descriptionEnd
+
+room:
+  ## @param room.replicaCount Number of room server replicas. Rooms are kept in memory without a shared adapter, so only 0 or 1 is allowed
+  ##
+  replicaCount: 1
+  ## @param room.port Port the room server listens on (exported to the container as `PORT`)
+  ##
+  port: 3002
+  ## excalidraw-room image
+  ## ref: https://hub.docker.com/r/excalidraw/excalidraw-room
+  ## @param room.image.registry Room image registry
+  ## @param room.image.repository Room image repository
+  ## @param room.image.tag Room image tag. Upstream only publishes `latest`, so pin by digest in production
+  ## @param room.image.digest Room image digest (e.g. `sha256:abcd...`). When set, it takes precedence over the tag
+  ## @param room.image.pullPolicy Room image pull policy
+  ##
+  image:
+    registry: docker.io
+    repository: excalidraw/excalidraw-room
+    tag: latest
+    digest: ""
+    pullPolicy: IfNotPresent
+  ## Room container resource requests and limits
+  ## @param room.resources.requests.cpu Room CPU request
+  ## @param room.resources.requests.memory Room memory request
+  ## @param room.resources.limits.memory Room memory limit
+  ##
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      memory: 256Mi
+  ## @param room.env [array] Extra environment variables for the room container
+  ## e.g:
+  ## env:
+  ##   - name: DEBUG
+  ##     value: "1"
+  ##
+  env: []
+  ## @param room.podAnnotations [object] Extra annotations for the room pods
+  ##
+  podAnnotations: {}
+  ## @param room.nodeSelector [object] Node labels for room pod assignment
+  ##
+  nodeSelector: {}
+  ## @param room.tolerations [array] Tolerations for room pod assignment
+  ##
+  tolerations: []
+  ## @param room.affinity [object] Affinity for room pod assignment
+  ##
+  affinity: {}
+  ## @param room.podSecurityContext [object] Pod-level security context for the room pods
+  ##
+  podSecurityContext: {}
+  ## @param room.securityContext.allowPrivilegeEscalation Disallow privilege escalation in the room container
+  ## @param room.securityContext.seccompProfile.type Seccomp profile type for the room container
+  ##
+  securityContext:
+    allowPrivilegeEscalation: false
+    seccompProfile:
+      type: RuntimeDefault
+
+## @section Collaboration URL patching parameters
+## @descriptionStart
+## The official frontend image hardcodes `https://oss-collab.excalidraw.com` and ignores runtime env vars
+## (upstream issue excalidraw/excalidraw#5188). These parameters control the startup rewrite.
+## @descriptionEnd
+
+collab:
+  ## @param collab.wsServerUrl URL browsers use to reach the room server. Empty means derive it from the ingress (`ingress.room.host`, else `ingress.web.host` with path `/socket.io`)
+  ##
+  wsServerUrl: ""
+
+rewrite:
+  ## @param rewrite.extra [array] Extra literal `from`/`to` string replacements applied to the static files after the mandatory collab rewrite. Use it to neutralise other external endpoints
+  ## e.g:
+  ## extra:
+  ##   - from: https://json.excalidraw.com/api/v2
+  ##     to: https://draw.corp.internal/api/v2
+  ##
+  extra: []
+
+## @section Ingress parameters
+## @descriptionStart
+## HTTPS is required by browsers for live collaboration (WebCrypto needs a secure context).
+## @descriptionEnd
+
+ingress:
+  ## @param ingress.enabled Create an Ingress resource
+  ##
+  enabled: true
+  ## @param ingress.className IngressClass name
+  ##
+  className: traefik
+  ## @param ingress.scheme Public scheme seen by browsers (`http` or `https`). Keep `https` even if TLS terminates at an external load balancer
+  ##
+  scheme: https
+  ## @param ingress.tls Enable TLS on the Ingress
+  ##
+  tls: false
+  ## @param ingress.annotations [object] Ingress annotations. The defaults keep long-lived WebSocket connections open on ingress-nginx
+  ##
+  annotations: {}
+  ## Hostname serving the frontend (and the room server when `ingress.room.host` is empty)
+  ## @param ingress.web.host Hostname serving the frontend (and the room server when `ingress.room.host` is empty)
+  ## @param ingress.web.tlsSecretName TLS secret for the web host
+  ##
+  web:
+    host: draw.corp.internal
+    tlsSecretName: excalidraw-tls
+  ## Optional dedicated hostname for the room server
+  ## @param ingress.room.host Dedicated hostname for the room server. Empty means same host as the frontend with path `/socket.io` (no CORS needed)
+  ## @param ingress.room.tlsSecretName TLS secret for the dedicated room host. Defaults to `ingress.web.tlsSecretName`
+  ##
+  room:
+    host: ""
+    tlsSecretName: ""
+
+## @section Network policy parameters
+## @descriptionStart
+## Enforces the air gap: pods may only egress to DNS.
+## @descriptionEnd
+
+networkPolicy:
+  ## @param networkPolicy.enabled Create NetworkPolicies for the frontend and room pods
+  ##
+  enabled: false
+  ## @param networkPolicy.dnsNamespaceSelector [object] Labels selecting the namespace running the cluster DNS (egress on port 53 is allowed to it)
+  ##
+  dnsNamespaceSelector:
+    kubernetes.io/metadata.name: kube-system
+  ## @param networkPolicy.ingressFrom [array] Allowed ingress peers (e.g. the ingress controller namespace). Empty allows any source
+  ## e.g:
+  ## ingressFrom:
+  ##   - namespaceSelector:
+  ##       matchLabels:
+  ##         kubernetes.io/metadata.name: ingress-nginx
+  ##
+  ingressFrom: []

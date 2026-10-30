@@ -1,0 +1,13 @@
+Excalidraw is deployed.
+
+  URL:                {{ .Values.ingress.scheme }}://{{ .Values.ingress.web.host }}
+  Collab server URL:  {{ include "excalidraw.wsUrl" . }}  (patched into the frontend at pod start)
+
+{{- if ne .Values.ingress.scheme "https" }}
+WARNING: live collaboration requires HTTPS (browser WebCrypto). Use https or it will not work.
+{{- end }}
+
+Verify the patch:
+  kubectl --namespace {{ .Release.Namespace }} logs deploy/{{ include "excalidraw.fullname" . }}-web -c rewrite-urls
+
+Then open the app -> menu -> "Live collaboration" -> Start session, and share the link.

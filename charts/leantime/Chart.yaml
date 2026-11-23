@@ -2,8 +2,8 @@ apiVersion: v2
 name: leantime
 description: Project management for the non-project manager
 type: application
-version: 0.2.10
-appVersion: 3.15.3
+version: 0.2.11
+appVersion: 3.17.0
 keywords:
   - project-management
   - task-management
